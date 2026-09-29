@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usuarios y perfiles — Versión con perfiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined">
+<style>
+  /* Paleta tomada de Source/Client/SmartFran.Cloud.Client.Component/Theme/AppTheme.cs */
+  :root {
+    --primary: #0F0035;
+    --secondary: #6E59EE;
+    --secondary-dark: #5842d8;
+    --secondary-soft: #efecfd;
+    --text: rgba(0, 0, 0, .87);
+    --text-2: rgba(0, 0, 0, .6);
+    --text-3: rgba(0, 0, 0, .38);
+    --divider: rgba(0, 0, 0, .12);
+    --outline: rgba(0, 0, 0, .23);
+    --bg: #ffffff;
+    --hover: rgba(0, 0, 0, .04);
+    --error: #d32f2f;
+    --radius: 3px;
+    --drawer: 240px;
+    --appbar: 64px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.43; letter-spacing: .01071em; }
+  .material-icons-outlined { font-size: 24px; line-height: 1; vertical-align: middle; user-select: none; }
+  button { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* Barra superior (MudAppBar Color.Primary, Elevation 5) */
+  .appbar { position: fixed; inset: 0 0 auto 0; height: var(--appbar); background: var(--primary); color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 24px 0 12px; z-index: 10;
+    box-shadow: 0 3px 5px -1px rgba(0,0,0,.2), 0 5px 8px 0 rgba(0,0,0,.14), 0 1px 14px 0 rgba(0,0,0,.12); }
+  .icon-btn { background: none; border: none; color: inherit; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .icon-btn:hover { background: var(--hover); }
+  .appbar .icon-btn { width: 48px; height: 48px; }
+  .appbar .icon-btn:hover { background: rgba(255,255,255,.08); }
+  .brand { font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+  .brand small { font-size: 11px; font-weight: 500; opacity: .7; margin-left: 8px; letter-spacing: .08em; }
+  .spacer { flex: 1; }
+  .who { display: flex; align-items: center; gap: 10px; }
+  .who .lines { display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.35; letter-spacing: .03333em; }
+
+  /* Menú lateral (MudDrawer + MudNavMenu Bordered) */
+  .drawer { position: fixed; top: var(--appbar); bottom: 0; left: 0; width: var(--drawer); background: #fff; border-right: 1px solid var(--divider); overflow-y: auto; padding: 12px; }
+  .nav-group > button, .nav-link { width: 100%; display: flex; align-items: center; gap: 16px; padding: 8px 16px; border: none; background: none; color: rgba(0,0,0,.7); font-size: 14px; text-align: left; border-radius: var(--radius); cursor: pointer; text-decoration: none; }
+  .nav-group > button:hover, .nav-link:hover { background: var(--hover); }
+  .nav-group > button .chev { margin-left: auto; transition: transform .2s; }
+  .nav-group.open > button .chev { transform: rotate(180deg); }
+  .nav-items { display: none; padding-left: 16px; }
+  .nav-group.open .nav-items { display: block; }
+  .nav-link.active { color: var(--secondary); background: var(--secondary-soft); font-weight: 500; border-right: 2px solid var(--secondary); }
+
+  .main { margin-left: var(--drawer); padding: calc(var(--appbar) + 16px) 24px 48px; }
+
+  /* Encabezados */
+  .toolbar { display: flex; align-items: center; gap: 16px; padding: 16px; flex-wrap: wrap; }
+  h4 { margin: 0; font-size: 2.125rem; font-weight: 700; line-height: 1.235; letter-spacing: .00735em; }
+  h6 { margin: 0; font-size: 1.25rem; font-weight: 500; line-height: 1.6; letter-spacing: .0075em; }
+  .subtitle { color: var(--text-2); margin: 4px 0 0; }
+  .card-content { padding: 0 16px 16px; }
+
+  /* Formularios (MudTextField Outlined Dense) */
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .field { position: relative; }
+  .field label { position: absolute; top: -8px; left: 10px; padding: 0 4px; background: #fff; font-size: 12px; color: var(--text-2); line-height: 16px; pointer-events: none; }
+  .field input { width: 100%; height: 40px; padding: 10.5px 14px; border: 1px solid var(--outline); border-radius: var(--radius); font: inherit; color: var(--text); background: #fff; }
+  .field input:hover { border-color: var(--text); }
+  .field input:focus { outline: none; border: 2px solid var(--secondary); padding: 9.5px 13px; }
+  .field:focus-within label { color: var(--secondary); }
+  .field.invalid input { border-color: var(--error); }
+  .field.invalid label { color: var(--error); }
+  .helper { font-size: 12px; color: var(--text-2); margin: 4px 14px 0; letter-spacing: .03333em; }
+  .field.invalid .helper { color: var(--error); }
+  .chips-field { min-height: 40px; border: 1px solid var(--outline); border-radius: var(--radius); padding: 5px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 4px 0 12px; border-radius: 16px; background: #e0e0e0; font-size: 13px; }
+  .chip button { border: none; background: none; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(0,0,0,.54); }
+  .chip button .material-icons-outlined { font-size: 18px; }
+  .chip.add { background: none; border: 1px dashed var(--outline); padding: 0 12px; cursor: pointer; color: var(--text-2); }
+
+  .section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--divider); }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .counter { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 16px; background: var(--secondary-soft); color: var(--secondary-dark); font-weight: 500; font-size: 13px; white-space: nowrap; }
+
+  /* Funcionalidades (editor de perfil) */
+  .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .feature { border: 1px solid var(--divider); border-radius: var(--radius); background: #fff; transition: border-color .15s, box-shadow .15s; }
+  .feature.on { border-color: var(--secondary); box-shadow: 0 0 0 1px var(--secondary); }
+  .feature-head { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; }
+  .feature-head .material-icons-outlined { color: var(--text-2); }
+  .feature.on .feature-head .material-icons-outlined { color: var(--secondary); }
+  .feature-title { flex: 1; display: flex; flex-direction: column; }
+  .feature-title strong { font-weight: 500; font-size: 15px; }
+  .feature-title span { font-size: 12px; color: var(--text-2); }
+  .feature-body { border-top: 1px solid var(--divider); padding: 4px 8px 8px; }
+  .perm { display: flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 4px; border-radius: var(--radius); cursor: pointer; }
+  .perm:hover { background: var(--hover); }
+  .perm input { width: 18px; height: 18px; margin: 0 10px 0 4px; accent-color: var(--secondary); cursor: pointer; }
+  .perm .label { flex: 1; }
+  .tag-new { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: #8a4b00; background: #ffe7c2; border-radius: 10px; padding: 2px 8px; }
+
+  /* Interruptor (MudSwitch) */
+  .switch { position: relative; width: 58px; height: 38px; border: none; background: none; cursor: pointer; padding: 0; flex-shrink: 0; }
+  .switch .track { position: absolute; left: 12px; top: 12px; width: 34px; height: 14px; border-radius: 7px; background: rgba(0,0,0,.38); transition: background .15s; }
+  .switch .thumb { position: absolute; left: 9px; top: 9px; width: 20px; height: 20px; border-radius: 50%; background: #fafafa; box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12); transition: transform .15s, background .15s; }
+  .switch[aria-checked="true"] .track { background: var(--secondary); opacity: .5; }
+  .switch[aria-checked="true"] .thumb { transform: translateX(20px); background: var(--secondary); }
+
+  /* Selección de perfiles en el alta */
+  .profiles-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .pick { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--divider); border-radius: var(--radius); background: #fff; cursor: pointer; font-size: 15px; font-weight: 500; }
+  .pick:hover { background: var(--hover); }
+  .pick input { width: 20px; height: 20px; margin: 0; accent-color: var(--secondary); cursor: pointer; flex-shrink: 0; }
+  .pick.on { border-color: var(--secondary); box-shadow: 0 0 0 1px var(--secondary); background: #fff; }
+  .pick .material-icons-outlined { color: var(--text-2); margin-left: auto; }
+  .pick.on .material-icons-outlined { color: var(--secondary); }
+  .selection { margin-top: 16px; color: var(--text-2); }
+  .selection strong { color: var(--text); font-weight: 500; }
+  .empty { border: 1px dashed var(--outline); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--text-2); }
+
+  /* Tabla (MudTable Dense Striped) */
+  .table-wrap { border-top: 1px solid var(--divider); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; font-size: 14px; padding: 6px 16px; height: 48px; border-bottom: 1px solid var(--divider); white-space: nowrap; }
+  td { padding: 6px 16px; height: 52px; border-bottom: 1px solid var(--divider); vertical-align: middle; }
+  tbody tr:nth-child(odd) { background: rgba(0,0,0,.02); }
+  tbody tr:hover { background: var(--hover); }
+  td.muted { color: var(--text-2); }
+  .row-actions { display: flex; justify-content: flex-end; gap: 4px; }
+  .row-actions .icon-btn { color: rgba(0,0,0,.54); }
+  .just-created td { animation: flash 2.2s ease-out; }
+  @keyframes flash { 0% { background: var(--secondary-soft); } 100% { background: transparent; } }
+
+  /* Acciones y botones (MudButton Filled) */
+  .actions { display: flex; justify-content: flex-end; gap: 8px; padding: 24px 16px 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 64px; height: 36px; padding: 6px 16px; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 500; letter-spacing: .02857em; text-transform: uppercase; cursor: pointer; text-decoration: none;
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12); }
+  .btn .material-icons-outlined { font-size: 20px; }
+  .btn-default { background: #e0e0e0; color: var(--text); }
+  .btn-default:hover { background: #d5d5d5; }
+  .btn-secondary { background: var(--secondary); color: #fff; }
+  .btn-secondary:hover { background: var(--secondary-dark); }
+  .btn-error { background: var(--error); color: #fff; }
+  .btn-text { background: none; box-shadow: none; color: var(--secondary); padding: 6px 8px; }
+  .btn-text:hover { background: var(--secondary-soft); }
+
+  /* Diálogo (MudDialog) */
+  .overlay { position: fixed; inset: 0; background: rgba(33,33,33,.5); display: flex; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
+  .dialog { background: #fff; border-radius: 4px; width: 100%; max-width: 440px; box-shadow: 0 11px 15px -7px rgba(0,0,0,.2), 0 24px 38px 3px rgba(0,0,0,.14), 0 9px 46px 8px rgba(0,0,0,.12); }
+  .dialog h6 { padding: 16px 24px 0; }
+  .dialog p { padding: 8px 24px 0; margin: 0; color: var(--text-2); }
+  .dialog .actions { padding: 16px; }
+
+  /* Snackbar (MudSnackbarProvider) */
+  .snackbar { position: fixed; right: 24px; bottom: 24px; min-width: 288px; max-width: 480px; background: #323232; color: #fff; border-radius: 4px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+    box-shadow: 0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12); transform: translateY(24px); opacity: 0; pointer-events: none; transition: all .2s; z-index: 40; }
+  .snackbar.show { transform: none; opacity: 1; pointer-events: auto; }
+  .snackbar.success .material-icons-outlined { color: #81c784; }
+  .snackbar.error .material-icons-outlined { color: #e57373; }
+  .snackbar.info .material-icons-outlined { color: #b3a7ff; }
+
+  .proto-bar { position: fixed; right: 16px; top: calc(var(--appbar) + 12px); display: flex; align-items: center; gap: 8px; z-index: 5; }
+  .proto-badge { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--secondary-dark); background: var(--secondary-soft); border: 1px solid #d6cffb; border-radius: 12px; padding: 4px 10px; }
+  .proto-bar .btn-text { font-size: 12px; height: 28px; text-transform: none; letter-spacing: 0; }
+
+  @media (max-width: 960px) {
+    .drawer { display: none; }
+    .main { margin-left: 0; }
+    .grid, .features, .profiles-pick { grid-template-columns: minmax(0, 1fr); }
+    h4 { font-size: 1.6rem; }
+    .who .lines { display: none; }
+    .proto-bar { position: static; justify-content: flex-end; margin: 8px 0 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <button class="icon-btn" type="button" aria-label="Menú"><span class="material-icons-outlined">menu</span></button>
+  <span class="brand">SmartFran<small>CLOUD</small></span>
+  <span class="spacer"></span>
+  <div class="who">
+    <div class="lines">
+      <span>franquiciado@demo.com</span>
+      <span>Gestor: Franquicia Demo</span>
+    </div>
+    <span class="material-icons-outlined" style="font-size: 36px;">account_circle</span>
+  </div>
+</header>
+
+<nav class="drawer" aria-label="Menú principal">
+  <div class="nav-group"><button type="button"><span class="material-icons-outlined">dashboard</span>Tableros<span class="material-icons-outlined chev">expand_more</span></button></div>
+  <div class="nav-group"><button type="button"><span class="material-icons-outlined">library_books</span>Catalogo<span class="material-icons-outlined chev">expand_more</span></button></div>
+  <div class="nav-group"><button type="button"><span class="material-icons-outlined">inventory_2</span>Stock<span class="material-icons-outlined chev">expand_more</span></button></div>
+  <div class="nav-group"><button type="button"><span class="material-icons-outlined">account_balance</span>Gestión<span class="material-icons-outlined chev">expand_more</span></button></div>
+  <div class="nav-group open">
+    <button type="button" aria-expanded="true"><span class="material-icons-outlined">security</span>Seguridad<span class="material-icons-outlined chev">expand_more</span></button>
+    <div class="nav-items">
+      <a class="nav-link" href="#/usuarios/crear" data-route="usuarios"><span class="material-icons-outlined">person</span>Usuarios</a>
+      <a class="nav-link" href="#/perfiles" data-route="perfiles"><span class="material-icons-outlined">badge</span>Perfiles</a>
+    </div>
+  </div>
+</nav>
+
+<div class="proto-bar">
+  <span class="proto-badge">PROTOTIPO · VERSIÓN CON PERFILES</span>
+  <button class="btn btn-text" type="button" id="open-window" title="Abre la otra pantalla en una ventana nueva; los cambios se ven en las dos.">
+    <span class="material-icons-outlined">open_in_new</span><span id="open-window-text">Abrir la otra pantalla en otra ventana</span>
+  </button>
+  <button class="btn btn-text" type="button" id="reset">Restablecer ejemplo</button>
+</div>
+
+<main class="main">
+
+  <!-- Pantalla 1a: listado de perfiles -->
+  <section id="view-perfiles" hidden>
+    <div class="toolbar">
+      <h4>Perfiles</h4>
+      <span class="spacer"></span>
+      <a class="btn btn-secondary" href="#/perfiles/nuevo"><span class="material-icons-outlined">add_circle</span>Crear</a>
+    </div>
+    <p class="subtitle" style="padding: 0 16px 16px;">Cada perfil agrupa los permisos de un puesto. Al crear un usuario, se le asignan uno o más perfiles.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Perfil</th><th>Funcionalidades</th><th>Permisos</th><th><span class="sr-only" style="position:absolute;left:-9999px;">Acciones</span></th></tr></thead>
+        <tbody id="profiles-rows"></tbody>
+      </table>
+      <div id="profiles-empty" class="empty" style="margin: 16px;" hidden>Todavía no hay perfiles. Creá el primero con <strong>Crear</strong>.</div>
+    </div>
+  </section>
+
+  <!-- Pantalla 1b: crear / modificar perfil -->
+  <section id="view-perfil" hidden>
+    <form id="profile-form" novalidate>
+      <div class="toolbar"><h4 id="profile-title">Crear nuevo perfil</h4></div>
+      <div class="card-content">
+        <div class="grid">
+          <div class="field" id="pname-field">
+            <label for="pname">Nombre del perfil</label>
+            <input id="pname" type="text" autocomplete="off" placeholder="Ej.: Encargado de turno">
+            <div class="helper" id="pname-helper"></div>
+          </div>
+        </div>
+        <section class="section" aria-labelledby="pperm-title">
+          <div class="section-head">
+            <div>
+              <h6 id="pperm-title">¿Qué incluye este perfil?</h6>
+              <p class="subtitle">Activá las funcionalidades del puesto. Dentro de cada una podés sacar o sumar permisos puntuales.</p>
+            </div>
+            <span class="counter" id="pcounter" aria-live="polite"></span>
+          </div>
+          <div class="features" id="pfeatures"></div>
+        </section>
+      </div>
+      <div class="actions">
+        <a class="btn btn-default" href="#/perfiles">Volver</a>
+        <button class="btn btn-secondary" type="submit">Guardar</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Pantalla 2: crear usuario asignando perfiles -->
+  <section id="view-usuario" hidden>
+    <form id="user-form" novalidate>
+      <div class="toolbar"><h4>Crear nuevo usuario</h4></div>
+      <div class="card-content">
+        <div class="grid">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" value="martina.lopez@sucursal.com" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="dni">DNI</label>
+            <input id="dni" type="text" inputmode="numeric" value="32.456.789" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" value="Martina" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="apellido">Apellido</label>
+            <input id="apellido" type="text" value="Lopez" autocomplete="off">
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label id="tiendas-label">Tiendas</label>
+            <div class="chips-field" role="group" aria-labelledby="tiendas-label" id="tiendas"></div>
+          </div>
+        </div>
+
+        <section class="section" aria-labelledby="pick-title">
+          <div class="section-head">
+            <div>
+              <h6 id="pick-title">¿Qué va a hacer esta persona?</h6>
+              <p class="subtitle">Elegí uno o más perfiles.</p>
+            </div>
+            <a class="btn btn-text" href="#/perfiles">Administrar perfiles</a>
+          </div>
+          <div class="profiles-pick" id="pick" role="group" aria-labelledby="pick-title"></div>
+          <div class="empty" id="pick-empty" hidden>No hay perfiles creados. <a href="#/perfiles/nuevo">Crear un perfil</a></div>
+          <div class="selection" id="selection" aria-live="polite"></div>
+        </section>
+      </div>
+      <div class="actions">
+        <a class="btn btn-default" href="#/perfiles">Volver</a>
+        <button class="btn btn-secondary" type="submit">Guardar</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div class="overlay" id="confirm" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <h6 id="confirm-title">Borrar perfil</h6>
+    <p id="confirm-text"></p>
+    <div class="actions">
+      <button class="btn btn-default" type="button" id="confirm-no">Cancelar</button>
+      <button class="btn btn-error" type="button" id="confirm-yes">Borrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="snackbar" id="snackbar" role="status" aria-live="polite">
+  <span class="material-icons-outlined" id="snack-icon">check_circle</span>
+  <span id="snack-text"></span>
+</div>
+
+<script>
+  // Catálogo de funcionalidades y permisos (propuesta del analista; ver _handoff.md).
+  var CATALOG = [
+    { id: 'ventas',    name: 'Ventas',             icon: 'point_of_sale', perms: [['registrar', 'Registrar venta'], ['consultar', 'Consultar ventas'], ['anular', 'Anular venta']] },
+    { id: 'caja',      name: 'Caja y turnos',      icon: 'schedule',      perms: [['abrir', 'Abrir turno'], ['cerrar', 'Cerrar turno'], ['ciego', 'Cierre ciego de caja', true]] },
+    { id: 'stock',     name: 'Stock',              icon: 'inventory_2',   perms: [['vstock', 'Consultar stock'], ['mstock', 'Registrar movimientos de stock']] },
+    { id: 'tesoreria', name: 'Tesorería',          icon: 'account_balance_wallet', perms: [['vmov', 'Consultar movimientos de caja'], ['rmov', 'Registrar ingresos y egresos'], ['depositos', 'Consultar depósitos de dinero']] },
+    { id: 'informes',  name: 'Informes',           icon: 'assessment',    perms: [['iventas', 'Informe de ventas'], ['iturno', 'Informe de cierre de turno']] },
+    { id: 'catalogo',  name: 'Catálogo y precios', icon: 'sell',          perms: [['vcat', 'Consultar catálogo'], ['vprec', 'Consultar listas de precio']] }
+  ];
+
+  var SAMPLE = [
+    { id: 'cajero', name: 'Cajero',          icon: 'point_of_sale', perms: ['registrar', 'consultar', 'anular', 'abrir', 'cerrar'] },
+    { id: 'stock',  name: 'Gestor de stock', icon: 'inventory_2',   perms: ['vstock', 'mstock'] },
+    { id: 'admin',  name: 'Administración',  icon: 'admin_panel_settings', perms: ['consultar', 'vstock', 'vmov', 'rmov', 'depositos', 'iventas', 'iturno', 'vcat', 'vprec'] }
+  ];
+
+  // Los perfiles se guardan en el navegador para que dos ventanas abiertas compartan los mismos datos.
+  var KEY = 'sf-proto-perfiles-v1';
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return JSON.parse(JSON.stringify(SAMPLE));
+  }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(profiles)); } catch (e) {} }
+
+  var profiles = load();
+  var draft = null;            // perfil en edición: { id|null, name, perms: {} }
+  var picked = [];             // perfiles elegidos en el alta
+  var tiendas = ['Sucursal Palermo'];
+  var ALL_TIENDAS = ['Sucursal Palermo', 'Sucursal Belgrano', 'Sucursal Caballito'];
+  var highlight = null;
+
+  function el(tag, attrs, children) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') n.textContent = attrs[k];
+      else if (k.indexOf('on') === 0) n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function icon(name) { return el('span', { 'class': 'material-icons-outlined', 'aria-hidden': 'true', text: name }); }
+  function featuresOf(perms) {
+    return CATALOG.filter(function (f) { return f.perms.some(function (p) { return perms.indexOf(p[0]) >= 0; }); });
+  }
+
+  var snackTimer;
+  function snack(text, kind) {
+    var s = document.getElementById('snackbar');
+    s.className = 'snackbar show ' + (kind || 'success');
+    document.getElementById('snack-icon').textContent = kind === 'error' ? 'error_outline' : (kind === 'info' ? 'sync' : 'check_circle');
+    document.getElementById('snack-text').textContent = text;
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(function () { s.className = 'snackbar'; }, 4000);
+  }
+
+  /* ---------- Pantalla: listado de perfiles ---------- */
+  function renderProfiles() {
+    var rows = document.getElementById('profiles-rows');
+    rows.innerHTML = '';
+    document.getElementById('profiles-empty').hidden = profiles.length > 0;
+    profiles.forEach(function (p) {
+      var tr = el('tr', { 'class': p.id === highlight ? 'just-created' : '' }, [
+        el('td', {}, [el('strong', { text: p.name, style: 'font-weight:500' })]),
+        el('td', { 'class': 'muted', text: featuresOf(p.perms).map(function (f) { return f.name; }).join(', ') || '—' }),
+        el('td', { text: String(p.perms.length) }),
+        el('td', {}, [el('div', { 'class': 'row-actions' }, [
+          el('a', { 'class': 'icon-btn', href: '#/perfiles/editar/' + p.id, 'aria-label': 'Modificar ' + p.name, title: 'Modificar' }, [icon('edit')]),
+          el('button', { 'class': 'icon-btn', type: 'button', 'aria-label': 'Borrar ' + p.name, title: 'Borrar', onclick: function () { askDelete(p); } }, [icon('delete')])
+        ])])
+      ]);
+      rows.appendChild(tr);
+    });
+  }
+
+  var pendingDelete = null;
+  function askDelete(p) {
+    pendingDelete = p;
+    document.getElementById('confirm-text').textContent = '¿Borrar el perfil «' + p.name + '»? Deja de estar disponible para asignar a usuarios.';
+    document.getElementById('confirm').hidden = false;
+    document.getElementById('confirm-no').focus();
+  }
+  document.getElementById('confirm-no').addEventListener('click', function () { document.getElementById('confirm').hidden = true; });
+  document.getElementById('confirm-yes').addEventListener('click', function () {
+    profiles = profiles.filter(function (x) { return x.id !== pendingDelete.id; });
+    picked = picked.filter(function (id) { return id !== pendingDelete.id; });
+    persist();
+    document.getElementById('confirm').hidden = true;
+    snack('Perfil «' + pendingDelete.name + '» borrado.');
+    renderAll();
+  });
+
+  /* ---------- Pantalla: editor de perfil ---------- */
+  function openEditor(id) {
+    var p = id ? profiles.filter(function (x) { return x.id === id; })[0] : null;
+    if (id && !p) { location.hash = '#/perfiles'; return; }
+    var on = {};
+    (p ? p.perms : []).forEach(function (x) { on[x] = true; });
+    draft = { id: p ? p.id : null, name: p ? p.name : '', perms: on };
+    document.getElementById('profile-title').textContent = p ? 'Modificar perfil' : 'Crear nuevo perfil';
+    document.getElementById('pname').value = draft.name;
+    setNameError('');
+    renderEditor();
+  }
+
+  function renderEditor() {
+    var box = document.getElementById('pfeatures');
+    box.innerHTML = '';
+    var featCount = 0, permCount = 0;
+    CATALOG.forEach(function (f) {
+      var ids = f.perms.map(function (p) { return p[0]; });
+      var n = ids.filter(function (id) { return draft.perms[id]; }).length;
+      var active = n > 0;
+      if (active) featCount++;
+      permCount += n;
+      var sw = el('button', { type: 'button', 'class': 'switch', role: 'switch', 'aria-checked': String(active), 'aria-label': 'Activar ' + f.name,
+        onclick: function () { ids.forEach(function (id) { draft.perms[id] = !active; }); renderEditor(); } },
+        [el('span', { 'class': 'track' }), el('span', { 'class': 'thumb' })]);
+      var body = el('div', { 'class': 'feature-body' }, f.perms.map(function (p) {
+        var id = 'pp-' + p[0];
+        var cb = el('input', { type: 'checkbox', id: id, onchange: function (e) { draft.perms[p[0]] = e.target.checked; renderEditor(); } });
+        cb.checked = !!draft.perms[p[0]];
+        return el('label', { 'class': 'perm', 'for': id }, [cb, el('span', { 'class': 'label', text: p[1] }), p[2] ? el('span', { 'class': 'tag-new', text: 'NUEVO' }) : null]);
+      }));
+      box.appendChild(el('div', { 'class': 'feature' + (active ? ' on' : '') }, [
+        el('div', { 'class': 'feature-head' }, [
+          icon(f.icon),
+          el('div', { 'class': 'feature-title' }, [el('strong', { text: f.name }), el('span', { text: active ? (n + ' de ' + ids.length + ' permisos') : 'Desactivada' })]),
+          sw
+        ]),
+        body
+      ]));
+    });
+    document.getElementById('pcounter').textContent = featCount + ' funcionalidades · ' + permCount + ' permisos';
+  }
+
+  function setNameError(msg) {
+    document.getElementById('pname-field').classList.toggle('invalid', !!msg);
+    document.getElementById('pname-helper').textContent = msg;
+  }
+
+  document.getElementById('profile-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('pname').value.trim();
+    var perms = Object.keys(draft.perms).filter(function (k) { return draft.perms[k]; });
+    if (!name) { setNameError('El nombre es requerido'); document.getElementById('pname').focus(); return; }
+    var dup = profiles.some(function (p) { return p.name.toLowerCase() === name.toLowerCase() && p.id !== draft.id; });
+    if (dup) { setNameError('Ya existe un perfil con ese nombre'); document.getElementById('pname').focus(); return; }
+    if (perms.length === 0) { snack('Activá al menos un permiso para el perfil.', 'error'); return; }
+    setNameError('');
+    var main = featuresOf(perms)[0];
+    if (draft.id) {
+      profiles = profiles.map(function (p) { return p.id === draft.id ? { id: p.id, name: name, icon: p.icon, perms: perms } : p; });
+      highlight = draft.id;
+      snack('Perfil «' + name + '» actualizado.');
+    } else {
+      var id = 'p' + Date.now();
+      profiles.push({ id: id, name: name, icon: main ? main.icon : 'badge', perms: perms });
+      highlight = id;
+      snack('Perfil «' + name + '» creado. Ya se puede asignar al crear un usuario.');
+    }
+    persist();
+    setTimeout(function () { highlight = null; }, 2500);
+    location.hash = '#/perfiles';
+  });
+
+  /* ---------- Pantalla: alta de usuario ---------- */
+  function renderTiendas() {
+    var box = document.getElementById('tiendas');
+    box.innerHTML = '';
+    tiendas.forEach(function (t) {
+      box.appendChild(el('span', { 'class': 'chip' }, [
+        document.createTextNode(t),
+        el('button', { type: 'button', 'aria-label': 'Quitar ' + t, onclick: function () { tiendas = tiendas.filter(function (x) { return x !== t; }); renderTiendas(); } }, [icon('cancel')])
+      ]));
+    });
+    var libres = ALL_TIENDAS.filter(function (t) { return tiendas.indexOf(t) < 0; });
+    if (libres.length) box.appendChild(el('button', { type: 'button', 'class': 'chip add', onclick: function () { tiendas.push(libres[0]); renderTiendas(); } }, [document.createTextNode('+ Agregar tienda')]));
+  }
+
+  function renderPick() {
+    picked = picked.filter(function (id) { return profiles.some(function (p) { return p.id === id; }); });
+    var box = document.getElementById('pick');
+    box.innerHTML = '';
+    document.getElementById('pick-empty').hidden = profiles.length > 0;
+    box.hidden = profiles.length === 0;
+    profiles.forEach(function (p) {
+      var on = picked.indexOf(p.id) >= 0;
+      var id = 'pick-' + p.id;
+      var cb = el('input', { type: 'checkbox', id: id, onchange: function (e) {
+        picked = e.target.checked ? picked.concat([p.id]) : picked.filter(function (x) { return x !== p.id; });
+        renderPick();
+      } });
+      cb.checked = on;
+      box.appendChild(el('label', { 'class': 'pick' + (on ? ' on' : ''), 'for': id }, [cb, el('span', { text: p.name }), icon(p.icon || 'badge')]));
+    });
+    var names = profiles.filter(function (p) { return picked.indexOf(p.id) >= 0; }).map(function (p) { return p.name; });
+    var sel = document.getElementById('selection');
+    sel.innerHTML = '';
+    if (names.length) { sel.appendChild(document.createTextNode('Perfiles: ')); sel.appendChild(el('strong', { text: names.join(' + ') })); }
+    else sel.textContent = profiles.length ? 'Ningún perfil seleccionado.' : '';
+  }
+
+  document.getElementById('user-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (picked.length === 0) { snack('Elegí al menos un perfil para el usuario.', 'error'); return; }
+    var nombre = (document.getElementById('nombre').value + ' ' + document.getElementById('apellido').value).trim();
+    var names = profiles.filter(function (p) { return picked.indexOf(p.id) >= 0; }).map(function (p) { return p.name; });
+    snack('Usuario ' + nombre + ' creado con ' + names.join(' + ') + ' (prototipo: no se guarda).');
+  });
+
+  /* ---------- Navegación entre pantallas ---------- */
+  function route() {
+    var h = location.hash || '#/perfiles';
+    var views = { perfiles: 'view-perfiles', perfil: 'view-perfil', usuario: 'view-usuario' };
+    var show;
+    if (h.indexOf('#/usuarios') === 0) show = 'usuario';
+    else if (h === '#/perfiles/nuevo') { show = 'perfil'; openEditor(null); }
+    else if (h.indexOf('#/perfiles/editar/') === 0) { show = 'perfil'; openEditor(h.split('/').pop()); }
+    else show = 'perfiles';
+    Object.keys(views).forEach(function (k) { document.getElementById(views[k]).hidden = k !== show; });
+    document.querySelectorAll('.nav-link').forEach(function (a) {
+      var active = (show === 'usuario' && a.dataset.route === 'usuarios') || (show !== 'usuario' && a.dataset.route === 'perfiles');
+      a.classList.toggle('active', active);
+      if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    document.getElementById('open-window-text').textContent = show === 'usuario' ? 'Abrir Perfiles en otra ventana' : 'Abrir Crear usuario en otra ventana';
+    renderAll();
+    if (show !== 'perfiles') highlight = null;
+    window.scrollTo(0, 0);
+  }
+
+  function renderAll() { renderProfiles(); renderPick(); }
+
+  document.getElementById('open-window').addEventListener('click', function () {
+    var target = (location.hash || '').indexOf('#/usuarios') === 0 ? '#/perfiles' : '#/usuarios/crear';
+    window.open(location.pathname + location.search + target, '_blank');
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    profiles = JSON.parse(JSON.stringify(SAMPLE));
+    picked = [];
+    persist();
+    snack('Se restablecieron los perfiles de ejemplo.', 'info');
+    if (location.hash.indexOf('#/perfiles/') === 0) location.hash = '#/perfiles'; else renderAll();
+  });
+
+  // Otra ventana creó, modificó o borró un perfil: se refleja acá al instante.
+  window.addEventListener('storage', function (e) {
+    if (e.key !== KEY) return;
+    var before = profiles.map(function (p) { return p.id; });
+    profiles = load();
+    var added = profiles.filter(function (p) { return before.indexOf(p.id) < 0; });
+    if (added.length) snack('Nuevo perfil disponible: «' + added[added.length - 1].name + '».', 'info');
+    renderAll();
+  });
+
+  document.querySelectorAll('.nav-group > button').forEach(function (b) {
+    b.addEventListener('click', function () { var g = b.parentElement; g.classList.toggle('open'); b.setAttribute('aria-expanded', g.classList.contains('open')); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !document.getElementById('confirm').hidden) document.getElementById('confirm').hidden = true;
+  });
+
+  window.addEventListener('hashchange', route);
+  renderTiendas();
+  route();
+</script>
+</body>
+</html>
